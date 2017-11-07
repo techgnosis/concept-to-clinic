@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: alb and listener
+Parameters:
+  ALBCertArn:
+    Type: String
+  Environment:
+    Type: String
+  TeamName:
+    Type: String
+  Subnets:
+    Type: CommaDelimitedList
+  VpcId:
+    Type: String
+Resources:
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Subnets: !Ref Subnets
+      Name: !Sub ${TeamName}-${Environment}
+      Scheme: internal
+      SecurityGroups:
+        - Fn::ImportValue:
+            !Sub ${TeamName}-ecs-loadbalancersecuritygroup
+
+  DefaultTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: ALB
+    Properties:
+      Port: 443
+      Protocol: HTTPS
+      VpcId: !Ref VpcId
+      Name: !Sub ${TeamName}-default-${Environment}
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn: DefaultTargetGroup
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref DefaultTargetGroup
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+
+Outputs:
+  ListenerArn:
+    Description: The ARN of the listener for this ALB
+    Value: !Ref ALBListener
+    Export:
+      Name: !Sub ${TeamName}-alb-${Environment}-listenerarn
+  LoadBalancerFullName:
+    Description: Full name used as an alarm dimension
+    Value: !GetAtt ALB.LoadBalancerFullName
+    Export:
+      Name: !Sub ${TeamName}-alb-${Environment}-loadbalancerfullname

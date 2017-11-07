@@ -1,0 +1,9 @@
+Image:
+Application: example
+CPU: 128
+MemoryReservation: 384
+NginxImage:
+DesiredCount: 2
+HealthCheckPath: /example/status_check
+ListenerPath: /example/*
+ListenerPriority: 3

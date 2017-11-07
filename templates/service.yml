@@ -1,0 +1,145 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ecs task definition and service
+Parameters:
+  ECSServiceRole:
+    Type: String
+  Image:
+    Type: String
+  ImageVersion:
+    Type: String
+  NginxImage:
+    Type: String
+  TaskRoleArn:
+    Type: String
+  Application:
+    Type: String
+  CPU:
+    Type: String
+  MemoryReservation:
+    Type: String
+  Environment:
+    Type: String
+  TeamName:
+    Type: String
+  DesiredCount:
+    Type: String
+  RetentionInDays:
+    Type: String
+  ClusterName:
+    Type: String
+  ListenerPath:
+    Type: String
+  ListenerPriority:
+    Type: String
+  DeregistrationDelay:
+    Type: String
+  VpcId:
+    Type: String
+  HealthCheckPath:
+    Type: String
+Resources:
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub ${TeamName}-${Environment}-${Application}
+      RetentionInDays: !Ref RetentionInDays
+      
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 443
+      Protocol: HTTPS
+      VpcId: !Ref VpcId
+      HealthCheckPath: !Sub ${HealthCheckPath}
+      Name: !Sub ${TeamName}-${Application}-${Environment}
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: !Ref DeregistrationDelay
+
+  ListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    DependsOn:
+      - TargetGroup
+    Properties:
+      ListenerArn:
+        Fn::ImportValue:
+          !Sub ${TeamName}-alb-${Environment}-listenerarn
+      Priority: !Ref ListenerPriority
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - !Sub ${ListenerPath}
+  
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      TaskRoleArn: !Ref TaskRoleArn
+      Family: !Sub ${TeamName}-${Application}-${Environment}
+      ContainerDefinitions:
+        - Name: !Ref Application
+          Image: !Sub ${Image}:${ImageVersion}
+          Cpu: !Ref CPU
+          MemoryReservation: !Ref MemoryReservation
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: us-east-1
+              awslogs-group: !Ref LogGroup
+              awslogs-stream-prefix: !Ref Application
+{% if EnvironmentVariables is defined %}
+          Environment:
+{% for EnvironmentVariable in EnvironmentVariables %}
+            - Name: {{ EnvironmentVariable['Name']}}
+              Value: {{ EnvironmentVariable['Value']}}
+{% endfor %}
+{% endif %}
+        - Name: nginx
+          Image: !Ref NginxImage
+          Cpu: 128
+          PortMappings:
+            - ContainerPort: 443
+              HostPort: 0
+          MemoryReservation: 128
+          Essential: true
+          Links:
+            - !Sub ${Application}:service
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      Role: !Ref ECSServiceRole
+      PlacementStrategies:
+        - Type: spread
+          Field: instanceId
+      Cluster: !Ref ClusterName
+      DesiredCount: !Ref DesiredCount
+      TaskDefinition: !Ref TaskDefinition
+      LoadBalancers:
+        - TargetGroupArn: !Ref TargetGroup
+          ContainerPort: 443
+          ContainerName: nginx
+          
+  HealthHostsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: !Sub Healthy host alarm for ${Application}
+      AlarmName: !Sub ${TeamName}-${Environment}-${Application}-healthyhosts
+      MetricName: HealthyHostCount
+      ComparisonOperator: LessThanThreshold
+      EvaluationPeriods: 1
+      Dimensions:
+        - Name: LoadBalancer
+          Value:
+            Fn::ImportValue:
+              !Sub ${TeamName}-alb-${Environment}-loadbalancerfullname
+        - Name: TargetGroup
+          Value: !GetAtt TargetGroup.TargetGroupFullName
+      Namespace: AWS/ApplicationELB
+      Period: 60
+      Statistic: Maximum
+      Threshold: !Ref DesiredCount

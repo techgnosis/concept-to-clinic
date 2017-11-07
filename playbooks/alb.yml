@@ -1,0 +1,18 @@
+---
+- hosts: localhost
+  vars_files:
+    - '../environment/{{ Environment }}/{{ Environment }}.yml'
+  tasks:
+  - name: create environment ALB
+    cloudformation:
+      stack_name: "{{ TeamName }}-alb-{{ Environment }}"
+      state: "present"
+      region: us-east-1
+      changeset_name: "{{ TeamName }}-alb"
+      create_changeset: true
+      template: "../templates/alb.yml"
+      template_parameters:
+        Environment: '{{ Environment }}'
+        TeamName: '{{ TeamName }}'
+        Subnets: '{{ Subnets }}'
+        VpcId: '{{ VpcId }}'

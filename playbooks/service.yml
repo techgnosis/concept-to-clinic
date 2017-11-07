@@ -1,0 +1,41 @@
+---
+- hosts: localhost
+  vars_files:
+    - '../service_config/{{ Config }}.yml'
+    - '../environment/{{ Environment }}/{{ Config }}.yml'
+    - '../environment/{{ Environment }}/{{ Environment }}.yml'
+  tasks:
+  - name: make sure .temp folder exists
+    file:
+      path: ../.temp
+      state: directory
+  - name: prepare template
+    template:
+      src: ../templates/service.yml
+      dest: ../.temp
+
+  - name: create ECS Service
+    cloudformation:
+      stack_name: "{{ TeamName }}-{{ Application }}-{{ Environment }}"
+      state: "present"
+      region: us-east-1
+      template: "../.temp/service.yml"
+      template_parameters:
+        ECSServiceRole: '{{ ECSServiceRole }}'
+        Image: '{{ Image }}'
+        ImageVersion: '{{ ImageVersion }}'
+        NginxImage: '{{ NginxImage }}'
+        TaskRoleArn: '{{ TaskRoleArn }}'
+        Application: '{{ Application }}'
+        CPU: '{{ CPU }}'
+        MemoryReservation: '{{ MemoryReservation }}'
+        Environment: '{{ Environment }}'
+        TeamName: '{{ TeamName }}'
+        DesiredCount: '{{ DesiredCount }}'
+        RetentionInDays: '{{ RetentionInDays }}'
+        DeregistrationDelay: '{{ DeregistrationDelay }}'
+        ClusterName: '{{ ClusterName }}'
+        HealthCheckPath: '{{ HealthCheckPath }}'
+        ListenerPath: '{{ ListenerPath }}'
+        ListenerPriority: '{{ ListenerPriority }}'
+        VpcId: '{{ VpcId }}'

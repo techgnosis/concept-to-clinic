@@ -1,0 +1,12 @@
+TeamName: ctc
+Capacity: 2
+ContainerInstanceProfile: arn:aws:iam::someaccount:instance-profile/some-role
+ECSServiceRole: EcsServiceRole
+ImageId:
+InstanceType: t2.medium
+ClusterName: ctc-dev
+KeyName:
+VpcId:
+Subnets:
+RetentionInDays: 1
+DeregistrationDelay: 0

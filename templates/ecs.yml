@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: multi-service ecs cluster
+Parameters:
+  Capacity:
+    Type: String
+  ContainerInstanceProfile:
+    Type: String
+  ImageId:
+    Type: AWS::EC2::Image::Id
+  InstanceType:
+    Type: String
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+  TeamName:
+    Type: String
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  Subnets:
+    Type: String
+  ClusterName:
+    Type: String
+  Environment:
+    Type: String
+
+Conditions:
+  SaveMoney: !Not [!Equals [!Ref Environment, prod]]
+
+Resources:
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Ingress from the load balancer
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          FromPort: 0
+          ToPort: 65535
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Ingress from the outside world
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          CidrIp: 10.0.0.0/8
+          FromPort: 443
+          ToPort: 443
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref ClusterName
+
+  LaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Metadata:
+      AWS::CloudFormation::Init: # order: packages, groups, users, sources, files, commands, services
+        configSets:
+          ecsconfig:
+            - configure
+            - install
+        configure:
+          commands:
+            01createecsconfig:
+              command: mkdir -p /etc/ecs && touch /etc/ecs/ecs.config
+            02clustersetup:
+              command: !Sub echo ECS_CLUSTER=${ClusterName} >> /etc/ecs/ecs.config
+        install:
+          packages:
+            yum:
+              ecs-init: []
+          services:
+            sysvinit:
+              docker:
+                enabled: true
+                ensureRunning: true
+    Properties:
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+      IamInstanceProfile: !Ref ContainerInstanceProfile
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      UserData:
+        "Fn::Base64":
+          !Sub |
+            #!/bin/bash -xe
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --configsets ecsconfig --resource LaunchConfiguration --region ${AWS::Region}
+
+  GoodNight:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: SaveMoney
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      DesiredCapacity: 0
+      MaxSize: 0
+      MinSize: 0
+      Recurrence: "0 2 * * *"
+
+  GoodMorning:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: SaveMoney
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      DesiredCapacity: 2
+      MaxSize: 2
+      MinSize: 2
+      Recurrence: "0 12 * * 1-5"
+
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: LaunchConfiguration
+    Properties:
+      LaunchConfigurationName: !Ref LaunchConfiguration
+      VPCZoneIdentifier: !Split [",", !Ref Subnets]
+      MinSize: !Ref Capacity
+      MaxSize: !Ref Capacity
+      DesiredCapacity: !Ref Capacity
+      Tags:
+        - Key: Name
+          Value: !Sub ${TeamName}-ecs-${Environment}
+          PropagateAtLaunch: true
+Outputs:
+  LoadBalancerSecurityGroup:
+    Description: Security group ID of the security group that new ALBs should use
+    Value: !Ref LoadBalancerSecurityGroup
+    Export:
+      Name: !Sub ${TeamName}-ecs-loadbalancersecuritygroup

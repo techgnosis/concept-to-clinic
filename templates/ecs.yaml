@@ -44,7 +44,7 @@ Resources:
     Properties:
       SecurityGroups:
         - !Ref InstanceSecurityGroup
-      IamInstanceProfile: concept-to-clinic-ecs-instance-profile
+      IamInstanceProfile: arn:aws:iam::113913174193:instance-profile/concept-to-clinic-ecs-instance-profile
       ImageId: ami-20ff515a
       InstanceType: t2.medium
       UserData:
@@ -58,9 +58,9 @@ Resources:
     DependsOn: LaunchConfiguration
     Properties:
       LaunchConfigurationName: !Ref LaunchConfiguration
-      AvailabilityZones:
-        - us-east-1a
-        - us-east-1b
+      VPCZoneIdentifier:
+        - subnet-b5a337d1
+        - subnet-b03fc29f
       MinSize: 2
       MaxSize: 2
       DesiredCapacity: 2

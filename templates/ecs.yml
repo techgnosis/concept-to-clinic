@@ -22,9 +22,6 @@ Parameters:
   Environment:
     Type: String
 
-Conditions:
-  SaveMoney: !Not [!Equals [!Ref Environment, prod]]
-
 Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -66,15 +63,6 @@ Resources:
               command: mkdir -p /etc/ecs && touch /etc/ecs/ecs.config
             02clustersetup:
               command: !Sub echo ECS_CLUSTER=${ClusterName} >> /etc/ecs/ecs.config
-        install:
-          packages:
-            yum:
-              ecs-init: []
-          services:
-            sysvinit:
-              docker:
-                enabled: true
-                ensureRunning: true
     Properties:
       SecurityGroups:
         - !Ref InstanceSecurityGroup

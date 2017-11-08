@@ -47,3 +47,8 @@ Outputs:
     Value: !Ref DefaultTargetGroup
     Export:
       Name: c2c-alb-defaulttargetgrouparn
+  TargetGroupFullName:
+    Description: Target Group full name
+    Value: !GetAtt DefaultTargetGroup.TargetGroupFullName
+    Export:
+      Name: c2c-alb-defaulttargetgroupfullname

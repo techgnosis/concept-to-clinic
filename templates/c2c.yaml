@@ -12,7 +12,7 @@ Resources:
     Properties:
       LogGroupName: c2c-api
 
-  MLLogGroup:
+  PredictionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: c2c-ml
@@ -41,32 +41,57 @@ Resources:
       Family: c2c
       ContainerDefinitions:
         - Name: c2c-ui
-          Image:
+          Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-ui:latest
           Essential: true
+          Links:
+            - c2c-api
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: ${AWS::Region}
               awslogs-group: !Ref UILogGroup
         - Name: c2c-api
-          Image:
+          Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-api:latest
           Essential: true
+          Environment:
+            - Name: POSTGRES_USER
+              Value: concepttoclinic
+            - Name: USE_DOCKER
+              Value: yes
+            - Name: SECRET_KEY
+              Value: notverysecret
+            - Name: DEBUG
+              Value: "True"
+            - Name: DJANGO_SETTINGS_MODULE
+              Value: config.settings.local
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: ${AWS::Region}
               awslogs-group: !Ref APILogGroup
-        - Name: c2c-ml
-          Image:
+        - Name: c2c-prediction
+          Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-prediction
           Essential: true
+          Environment:
+            - Name: FLASK_DEBUG
+              Value: 1
+            - Name: FLASK_APP
+              Value: src/factory.py
+            - Name: LC_ALL
+              Value: C.UTF-8
+            - Name: LANG
+              Value: C.UTF-8
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: ${AWS::Region}
-              awslogs-group: !Ref MLLogGroup
+              awslogs-group: !Ref PredictionLogGroup
         - Name: c2c-postgres
-          Image:
+          Image: postgres:9.6
           Essential: true
+          Environment:
+            - Name: POSTGRES_USER
+              Value: concepttoclinic
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -76,7 +101,7 @@ Resources:
   Service:
     Type: AWS::ECS::Service
     Properties:
-      Role: !Ref ECSServiceRole
+      Role:  arn:aws:iam::113913174193:role/concept-to-clinic-ecs-service-role
       PlacementStrategies:
         - Type: spread
           Field: instanceId

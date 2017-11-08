@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: c2c task definition and service
+Description: c2c task definition and service and logging
 Resources:
 
   UILogGroup:
@@ -42,6 +42,7 @@ Resources:
       ContainerDefinitions:
         - Name: c2c-ui
           Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-ui:latest
+          MemoryReservation: 256
           Essential: true
           Links:
             - c2c-api
@@ -52,6 +53,7 @@ Resources:
               awslogs-group: !Ref UILogGroup
         - Name: c2c-api
           Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-api:latest
+          MemoryReservation: 256
           Essential: true
           Environment:
             - Name: POSTGRES_USER
@@ -71,6 +73,7 @@ Resources:
               awslogs-group: !Ref APILogGroup
         - Name: c2c-prediction
           Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-prediction
+          MemoryReservation: 256
           Essential: true
           Environment:
             - Name: FLASK_DEBUG
@@ -88,6 +91,7 @@ Resources:
               awslogs-group: !Ref PredictionLogGroup
         - Name: c2c-postgres
           Image: postgres:9.6
+          MemoryReservation: 256
           Essential: true
           Environment:
             - Name: POSTGRES_USER
@@ -110,7 +114,7 @@ Resources:
       TaskDefinition: !Ref TaskDefinition
       LoadBalancers:
         - TargetGroupArn: !ImportValue c2c-alb-defaulttargetgrouparn
-          ContainerPort: 443
+          ContainerPort: 8080
           ContainerName: c2c-ui
 
   HealthHostsAlarm:
@@ -125,7 +129,7 @@ Resources:
         - Name: LoadBalancer
           Value: !ImportValue c2c-alb-loadbalancerfullname
         - Name: TargetGroup
-          Value: !GetAtt TargetGroup.TargetGroupFullName
+          Value: !ImportValue c2c-alb-defaulttargetgroupfullname
       Namespace: AWS/ApplicationELB
       Period: 60
       Statistic: Maximum

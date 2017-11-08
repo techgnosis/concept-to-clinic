@@ -6,7 +6,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Ingress from the load balancer
-      VpcId: !Ref VpcId
+      VpcId: vpc-93f442eb
       SecurityGroupIngress:
         - IpProtocol: tcp
           SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
@@ -16,7 +16,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Ingress from the outside world
-      VpcId: !Ref VpcId
+      VpcId: vpc-93f442eb
       SecurityGroupIngress:
         - IpProtocol: tcp
           CidrIp: 0.0.0.0/0
@@ -44,10 +44,9 @@ Resources:
     Properties:
       SecurityGroups:
         - !Ref InstanceSecurityGroup
-      IamInstanceProfile: !Ref ContainerInstanceProfile
-      ImageId: !Ref ImageId
+      IamInstanceProfile: concept-to-clinic-ecs-instance-profile
+      ImageId: ami-20ff515a
       InstanceType: t2.medium
-      KeyName: !Ref KeyName
       UserData:
         Fn::Base64:
           !Sub |

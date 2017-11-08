@@ -38,7 +38,6 @@ Resources:
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      TaskRoleArn: !Ref TaskRoleArn
       Family: c2c
       ContainerDefinitions:
         - Name: c2c-ui

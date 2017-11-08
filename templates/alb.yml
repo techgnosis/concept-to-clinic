@@ -4,7 +4,9 @@ Resources:
   ALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Subnets: !Ref Subnets
+      Subnets:
+        - subnet-b5a337d1
+        - subnet-b03fc29f
       Name: c2c
       SecurityGroups: !ImportValue c2c-ecs-loadbalancersecuritygroup
 
@@ -14,7 +16,7 @@ Resources:
     Properties:
       Port: 80
       Protocol: HTTP
-      VpcId: !Ref VpcId
+      VpcId: vpc-93f442eb
       Name: c2c
 
   ALBListener:

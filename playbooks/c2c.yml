@@ -8,4 +8,4 @@
       region:
       changeset_name: c2c-service
       create_changeset: true
-      template: "../templates/service.yml"
+      template: "../templates/c2c.yml"

@@ -8,8 +8,8 @@ The ALB template uses exported Outputs from the ECS template.
 
 ansible-playbook playbooks/alb.yml
 
-Service (initial creation and deployment of new versions)
+C2C
 -------
 The Service template uses exported Outputs from the ALB template
 
-ansible-playbook playbooks/service.yml
+ansible-playbook playbooks/c2c.yml

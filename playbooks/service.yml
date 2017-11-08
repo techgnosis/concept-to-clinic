@@ -5,5 +5,7 @@
     cloudformation:
       stack_name: c2c-service
       state: present
-      region: us-east-1
+      region:
+      changeset_name: c2c-service
+      create_changeset: true
       template: "../templates/service.yml"

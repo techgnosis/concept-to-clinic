@@ -5,7 +5,7 @@
     cloudformation:
       stack_name: c2c-ecs
       state: present
-      region: us-east-1
+      region:
       changeset_name: c2c-ecs
       create_changeset: true
       template: "../templates/ecs.yml"

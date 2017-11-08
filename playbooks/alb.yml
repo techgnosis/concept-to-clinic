@@ -5,7 +5,7 @@
     cloudformation:
       stack_name: c2c-alb
       state: present
-      region: us-east-1
+      region:
       changeset_name: c2c-alb
       create_changeset: true
       template: "../templates/alb.yml"

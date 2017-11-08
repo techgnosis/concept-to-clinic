@@ -1,5 +1,0 @@
-EnvironmentVariables:
-- Name: SOME_KEY
-  Value: dev
-
-TaskRoleArn: arn:aws:iam::someaccount:role/some-role

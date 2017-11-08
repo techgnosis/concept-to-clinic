@@ -1,24 +1,11 @@
 ---
 - hosts: localhost
-  vars_files:
-    - '../environment/{{ Environment }}/{{ Environment }}.yml'
   tasks:
   - name: create ECS cluster
     cloudformation:
-      stack_name: "{{ TeamName }}-ecs-{{ Environment }}"
-      state: "present"
+      stack_name: c2c-ecs
+      state: present
       region: us-east-1
-      changeset_name: "{{ TeamName }}-ecs"
+      changeset_name: c2c-ecs
       create_changeset: true
       template: "../templates/ecs.yml"
-      template_parameters:
-        Capacity: '{{ Capacity }}'
-        ContainerInstanceProfile: '{{ ContainerInstanceProfile }}'
-        ImageId: '{{ ImageId }}'
-        InstanceType: '{{ InstanceType }}'
-        KeyName: '{{ KeyName }}'
-        TeamName: '{{ TeamName }}'
-        VpcId: '{{ VpcId }}'
-        Subnets: '{{ Subnets }}'
-        ClusterName: '{{ ClusterName }}'
-        Environment: '{{ Environment }}'

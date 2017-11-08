@@ -30,18 +30,9 @@ Resources:
 
   LaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
-    Metadata:
-      AWS::CloudFormation::Init: # order: packages, groups, users, sources, files, commands, services
-        configSets:
-          ecsconfig:
-            - configure
-        configure:
-          commands:
-            01createecsconfig:
-              command: mkdir -p /etc/ecs && touch /etc/ecs/ecs.config
-            02clustersetup:
-              command: echo ECS_CLUSTER=c2c >> /etc/ecs/ecs.config
     Properties:
+      AssociatePublicIpAddress: true
+      KeyName: james
       SecurityGroups:
         - !Ref InstanceSecurityGroup
       IamInstanceProfile: arn:aws:iam::113913174193:instance-profile/concept-to-clinic-ecs-instance-profile
@@ -51,7 +42,7 @@ Resources:
         Fn::Base64:
           !Sub |
             #!/bin/bash -xe
-            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --configsets ecsconfig --resource LaunchConfiguration --region ${AWS::Region}
+            echo ECS_CLUSTER=c2c >> /etc/ecs/ecs.config
 
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup

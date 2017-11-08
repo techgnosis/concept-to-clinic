@@ -1,28 +1,7 @@
-AWSTemplateFormatVersion: "2010-09-09"
-Description: multi-service ecs cluster
-Parameters:
-  Capacity:
-    Type: String
-  ContainerInstanceProfile:
-    Type: String
-  ImageId:
-    Type: AWS::EC2::Image::Id
-  InstanceType:
-    Type: String
-  KeyName:
-    Type: AWS::EC2::KeyPair::KeyName
-  TeamName:
-    Type: String
-  VpcId:
-    Type: AWS::EC2::VPC::Id
-  Subnets:
-    Type: String
-  ClusterName:
-    Type: String
-  Environment:
-    Type: String
-
+AWSTemplateFormatVersion: 2010-09-09
+Description: c2c ecs cluster
 Resources:
+
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -40,14 +19,14 @@ Resources:
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
-          CidrIp: 10.0.0.0/8
-          FromPort: 443
-          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          FromPort: 80
+          ToPort: 80
 
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Ref ClusterName
+      ClusterName: c2c
 
   LaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -56,45 +35,24 @@ Resources:
         configSets:
           ecsconfig:
             - configure
-            - install
         configure:
           commands:
             01createecsconfig:
               command: mkdir -p /etc/ecs && touch /etc/ecs/ecs.config
             02clustersetup:
-              command: !Sub echo ECS_CLUSTER=${ClusterName} >> /etc/ecs/ecs.config
+              command: echo ECS_CLUSTER=c2c >> /etc/ecs/ecs.config
     Properties:
       SecurityGroups:
         - !Ref InstanceSecurityGroup
       IamInstanceProfile: !Ref ContainerInstanceProfile
       ImageId: !Ref ImageId
-      InstanceType: !Ref InstanceType
+      InstanceType: t2.medium
       KeyName: !Ref KeyName
       UserData:
-        "Fn::Base64":
+        Fn::Base64:
           !Sub |
             #!/bin/bash -xe
             /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --configsets ecsconfig --resource LaunchConfiguration --region ${AWS::Region}
-
-  GoodNight:
-    Type: AWS::AutoScaling::ScheduledAction
-    Condition: SaveMoney
-    Properties:
-      AutoScalingGroupName: !Ref AutoScalingGroup
-      DesiredCapacity: 0
-      MaxSize: 0
-      MinSize: 0
-      Recurrence: "0 2 * * *"
-
-  GoodMorning:
-    Type: AWS::AutoScaling::ScheduledAction
-    Condition: SaveMoney
-    Properties:
-      AutoScalingGroupName: !Ref AutoScalingGroup
-      DesiredCapacity: 2
-      MaxSize: 2
-      MinSize: 2
-      Recurrence: "0 12 * * 1-5"
 
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -102,16 +60,16 @@ Resources:
     Properties:
       LaunchConfigurationName: !Ref LaunchConfiguration
       VPCZoneIdentifier: !Split [",", !Ref Subnets]
-      MinSize: !Ref Capacity
-      MaxSize: !Ref Capacity
-      DesiredCapacity: !Ref Capacity
+      MinSize: 2
+      MaxSize: 2
+      DesiredCapacity: 2
       Tags:
         - Key: Name
-          Value: !Sub ${TeamName}-ecs-${Environment}
+          Value: c2c-ecs
           PropagateAtLaunch: true
 Outputs:
   LoadBalancerSecurityGroup:
     Description: Security group ID of the security group that new ALBs should use
     Value: !Ref LoadBalancerSecurityGroup
     Export:
-      Name: !Sub ${TeamName}-ecs-loadbalancersecuritygroup
+      Name: c2c-ecs-loadbalancersecuritygroup

@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: c2c task definition and service
 Resources:
-  
+
   UILogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -26,32 +26,30 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       ListenerArn:
-        Fn::ImportValue:
-          !Sub ${TeamName}-alb-${Environment}-listenerarn
-      Priority: !Ref ListenerPriority
+        Fn::ImportValue: c2c-alb-listenerarn
+      Priority: 1
       Actions:
         - Type: forward
           TargetGroupArn:
-            Fn::ImportValue:
-              !Sub ${TeamName}-alb-${Environment}-defaulttargetgrouparn
+            Fn::ImportValue: c2c-alb-defaulttargetgrouparn
       Conditions:
         - Field: path-pattern
           Values:
-            - !Sub ${ListenerPath}
+            - /
 
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       TaskRoleArn: !Ref TaskRoleArn
-      Family: !Sub ${TeamName}-${Application}-${Environment}
+      Family: c2c
       ContainerDefinitions:
         - Name: c2c-ui
-          Image: !Sub ${Image}:${ImageVersion}
+          Image:
           Essential: true
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-region: us-east-1
+              awslogs-region: ${AWS::Region}
               awslogs-group: !Ref UILogGroup
         - Name: c2c-api
           Image:
@@ -59,7 +57,7 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-region: us-east-1
+              awslogs-region: ${AWS::Region}
               awslogs-group: !Ref APILogGroup
         - Name: c2c-ml
           Image:
@@ -67,7 +65,7 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-region: us-east-1
+              awslogs-region: ${AWS::Region}
               awslogs-group: !Ref MLLogGroup
         - Name: c2c-postgres
           Image:
@@ -75,7 +73,7 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-region: us-east-1
+              awslogs-region: ${AWS::Region}
               awslogs-group: !Ref PostgresLogGroup
 
   Service:
@@ -90,27 +88,25 @@ Resources:
       TaskDefinition: !Ref TaskDefinition
       LoadBalancers:
         - TargetGroupArn:
-            Fn::ImportValue:
-              !Sub ${TeamName}-alb-${Environment}-defaulttargetgrouparn
+            Fn::ImportValue: c2c-alb-defaulttargetgrouparn
           ContainerPort: 443
           ContainerName: c2c-ui
 
   HealthHostsAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: !Sub Healthy host alarm for ${Application}
-      AlarmName: !Sub ${TeamName}-${Environment}-${Application}-healthyhosts
+      AlarmDescription: Healthy host alarm for c2c
+      AlarmName: c2c-healthyhosts
       MetricName: HealthyHostCount
       ComparisonOperator: LessThanThreshold
       EvaluationPeriods: 1
       Dimensions:
         - Name: LoadBalancer
           Value:
-            Fn::ImportValue:
-              !Sub ${TeamName}-alb-${Environment}-loadbalancerfullname
+            Fn::ImportValue: c2c-alb-loadbalancerfullname
         - Name: TargetGroup
           Value: !GetAtt TargetGroup.TargetGroupFullName
       Namespace: AWS/ApplicationELB
       Period: 60
       Statistic: Maximum
-      Threshold: !Ref DesiredCount
+      Threshold: 2

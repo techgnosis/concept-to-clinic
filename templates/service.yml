@@ -44,23 +44,9 @@ Resources:
     Properties:
       LogGroupName: !Sub ${TeamName}-${Environment}-${Application}
       RetentionInDays: !Ref RetentionInDays
-      
-  TargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      Port: 443
-      Protocol: HTTPS
-      VpcId: !Ref VpcId
-      HealthCheckPath: !Sub ${HealthCheckPath}
-      Name: !Sub ${TeamName}-${Application}-${Environment}
-      TargetGroupAttributes:
-        - Key: deregistration_delay.timeout_seconds
-          Value: !Ref DeregistrationDelay
 
   ListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    DependsOn:
-      - TargetGroup
     Properties:
       ListenerArn:
         Fn::ImportValue:
@@ -68,12 +54,14 @@ Resources:
       Priority: !Ref ListenerPriority
       Actions:
         - Type: forward
-          TargetGroupArn: !Ref TargetGroup
+          TargetGroupArn:
+            Fn::ImportValue:
+              !Sub ${TeamName}-alb-${Environment}-defaulttargetgrouparn 
       Conditions:
         - Field: path-pattern
           Values:
             - !Sub ${ListenerPath}
-  
+
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -123,7 +111,7 @@ Resources:
         - TargetGroupArn: !Ref TargetGroup
           ContainerPort: 443
           ContainerName: nginx
-          
+
   HealthHostsAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:

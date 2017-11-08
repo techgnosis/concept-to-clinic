@@ -30,6 +30,9 @@ Resources:
       Protocol: HTTPS
       VpcId: !Ref VpcId
       Name: !Sub ${TeamName}-default-${Environment}
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: !Ref DeregistrationDelay
 
   ALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -53,3 +56,8 @@ Outputs:
     Value: !GetAtt ALB.LoadBalancerFullName
     Export:
       Name: !Sub ${TeamName}-alb-${Environment}-loadbalancerfullname
+  TargetGroupArn:
+    Description: ARN of the default target group
+    Value: !Ref DefaultTargetGroup
+    Export:
+      Name: !Sub ${TeamName}-alb-${Environment}-defaulttargetgrouparn

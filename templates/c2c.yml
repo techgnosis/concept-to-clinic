@@ -25,13 +25,11 @@ Resources:
   ListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
-      ListenerArn:
-        Fn::ImportValue: c2c-alb-listenerarn
+      ListenerArn: !ImportValue c2c-alb-listenerarn
       Priority: 1
       Actions:
         - Type: forward
-          TargetGroupArn:
-            Fn::ImportValue: c2c-alb-defaulttargetgrouparn
+          TargetGroupArn: !ImportValue c2c-alb-defaulttargetgrouparn
       Conditions:
         - Field: path-pattern
           Values:
@@ -87,8 +85,7 @@ Resources:
       DesiredCount: 2
       TaskDefinition: !Ref TaskDefinition
       LoadBalancers:
-        - TargetGroupArn:
-            Fn::ImportValue: c2c-alb-defaulttargetgrouparn
+        - TargetGroupArn: !ImportValue c2c-alb-defaulttargetgrouparn
           ContainerPort: 443
           ContainerName: c2c-ui
 
@@ -102,8 +99,7 @@ Resources:
       EvaluationPeriods: 1
       Dimensions:
         - Name: LoadBalancer
-          Value:
-            Fn::ImportValue: c2c-alb-loadbalancerfullname
+          Value: !ImportValue c2c-alb-loadbalancerfullname
         - Name: TargetGroup
           Value: !GetAtt TargetGroup.TargetGroupFullName
       Namespace: AWS/ApplicationELB

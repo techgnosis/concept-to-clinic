@@ -6,8 +6,7 @@ Resources:
     Properties:
       Subnets: !Ref Subnets
       Name: c2c
-      SecurityGroups:
-        - Fn::ImportValue: c2c-ecs-loadbalancersecuritygroup
+      SecurityGroups: !ImportValue c2c-ecs-loadbalancersecuritygroup
 
   DefaultTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup

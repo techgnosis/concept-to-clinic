@@ -1,49 +1,26 @@
-AWSTemplateFormatVersion: "2010-09-09"
-Description: ecs task definition and service
-Parameters:
-  ECSServiceRole:
-    Type: String
-  Image:
-    Type: String
-  ImageVersion:
-    Type: String
-  NginxImage:
-    Type: String
-  TaskRoleArn:
-    Type: String
-  Application:
-    Type: String
-  CPU:
-    Type: String
-  MemoryReservation:
-    Type: String
-  Environment:
-    Type: String
-  TeamName:
-    Type: String
-  DesiredCount:
-    Type: String
-  RetentionInDays:
-    Type: String
-  ClusterName:
-    Type: String
-  ListenerPath:
-    Type: String
-  ListenerPriority:
-    Type: String
-  DeregistrationDelay:
-    Type: String
-  VpcId:
-    Type: String
-  HealthCheckPath:
-    Type: String
+AWSTemplateFormatVersion: 2010-09-09
+Description: c2c task definition and service
 Resources:
-
-  LogGroup:
+  
+  UILogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub ${TeamName}-${Environment}-${Application}
-      RetentionInDays: !Ref RetentionInDays
+      LogGroupName: c2c-ui
+
+  APILogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: c2c-api
+
+  MLLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: c2c-ml
+
+  PostgresLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: c2c-postgres
 
   ListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
@@ -56,7 +33,7 @@ Resources:
         - Type: forward
           TargetGroupArn:
             Fn::ImportValue:
-              !Sub ${TeamName}-alb-${Environment}-defaulttargetgrouparn 
+              !Sub ${TeamName}-alb-${Environment}-defaulttargetgrouparn
       Conditions:
         - Field: path-pattern
           Values:
@@ -68,34 +45,38 @@ Resources:
       TaskRoleArn: !Ref TaskRoleArn
       Family: !Sub ${TeamName}-${Application}-${Environment}
       ContainerDefinitions:
-        - Name: !Ref Application
+        - Name: c2c-ui
           Image: !Sub ${Image}:${ImageVersion}
-          Cpu: !Ref CPU
-          MemoryReservation: !Ref MemoryReservation
           Essential: true
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: us-east-1
-              awslogs-group: !Ref LogGroup
-              awslogs-stream-prefix: !Ref Application
-{% if EnvironmentVariables is defined %}
-          Environment:
-{% for EnvironmentVariable in EnvironmentVariables %}
-            - Name: {{ EnvironmentVariable['Name']}}
-              Value: {{ EnvironmentVariable['Value']}}
-{% endfor %}
-{% endif %}
-        - Name: nginx
-          Image: !Ref NginxImage
-          Cpu: 128
-          PortMappings:
-            - ContainerPort: 443
-              HostPort: 0
-          MemoryReservation: 128
+              awslogs-group: !Ref UILogGroup
+        - Name: c2c-api
+          Image:
           Essential: true
-          Links:
-            - !Sub ${Application}:service
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: us-east-1
+              awslogs-group: !Ref APILogGroup
+        - Name: c2c-ml
+          Image:
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: us-east-1
+              awslogs-group: !Ref MLLogGroup
+        - Name: c2c-postgres
+          Image:
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: us-east-1
+              awslogs-group: !Ref PostgresLogGroup
 
   Service:
     Type: AWS::ECS::Service
@@ -104,13 +85,15 @@ Resources:
       PlacementStrategies:
         - Type: spread
           Field: instanceId
-      Cluster: !Ref ClusterName
-      DesiredCount: !Ref DesiredCount
+      Cluster: c2c
+      DesiredCount: 2
       TaskDefinition: !Ref TaskDefinition
       LoadBalancers:
-        - TargetGroupArn: !Ref TargetGroup
+        - TargetGroupArn:
+            Fn::ImportValue:
+              !Sub ${TeamName}-alb-${Environment}-defaulttargetgrouparn
           ContainerPort: 443
-          ContainerName: nginx
+          ContainerName: c2c-ui
 
   HealthHostsAlarm:
     Type: AWS::CloudWatch::Alarm

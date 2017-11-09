@@ -117,7 +117,7 @@ Resources:
         - Type: spread
           Field: instanceId
       Cluster: c2c
-      DesiredCount: 2
+      DesiredCount: 1
       TaskDefinition: !Ref TaskDefinition
       LoadBalancers:
         - TargetGroupArn: !ImportValue c2c-alb-defaulttargetgrouparn
@@ -140,4 +140,4 @@ Resources:
       Namespace: AWS/ApplicationELB
       Period: 60
       Statistic: Maximum
-      Threshold: 2
+      Threshold: 1

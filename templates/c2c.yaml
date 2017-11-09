@@ -44,12 +44,17 @@ Resources:
           Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-ui:latest
           MemoryReservation: 256
           Essential: true
+          Command:
+            - npm run dev
+          PortMappings:
+            - ContainerPort: 8000
+              HostPort: 0
           Links:
             - c2c-api
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-region: ${AWS::Region}
+              awslogs-region: us-east-1
               awslogs-group: !Ref UILogGroup
         - Name: c2c-api
           Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-api:latest
@@ -69,12 +74,14 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-region: ${AWS::Region}
+              awslogs-region: us-east-1
               awslogs-group: !Ref APILogGroup
         - Name: c2c-prediction
           Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-prediction
           MemoryReservation: 256
           Essential: true
+          Command:
+            - flask run --host=0.0.0.0 --port=8001
           Environment:
             - Name: FLASK_DEBUG
               Value: 1
@@ -87,7 +94,7 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-region: ${AWS::Region}
+              awslogs-region: us-east-1
               awslogs-group: !Ref PredictionLogGroup
         - Name: c2c-postgres
           Image: postgres:9.6
@@ -99,7 +106,7 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-region: ${AWS::Region}
+              awslogs-region: us-east-1
               awslogs-group: !Ref PostgresLogGroup
 
   Service:
@@ -114,7 +121,7 @@ Resources:
       TaskDefinition: !Ref TaskDefinition
       LoadBalancers:
         - TargetGroupArn: !ImportValue c2c-alb-defaulttargetgrouparn
-          ContainerPort: 8080
+          ContainerPort: 8000
           ContainerName: c2c-ui
 
   HealthHostsAlarm:

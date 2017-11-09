@@ -46,7 +46,7 @@ Resources:
           Essential: false
           Environment:
             - Name: NGINX_API_URL
-              Value: http://c2c-api/api
+              Value: http://c2c-api:5000/api
             - Name: NGINX_HOST
               Value: c2c-ui
           PortMappings:

@@ -44,11 +44,14 @@ Resources:
           Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-ui:latest
           MemoryReservation: 256
           Essential: true
-          Command:
-            - npm run dev
+          Environment:
+            - Name: NGINX_API_URL
+              Value: http://localhost:5001/api
+            - Name: NGINX_HOST
+              Value: 0.0.0.0
           PortMappings:
-            - ContainerPort: 8000
-              HostPort: 0
+            - ContainerPort: 80
+              HostPort: 80
           Links:
             - c2c-api
           LogConfiguration:
@@ -63,14 +66,17 @@ Resources:
           Environment:
             - Name: POSTGRES_USER
               Value: concepttoclinic
-            - Name: USE_DOCKER
-              Value: yes
             - Name: SECRET_KEY
-              Value: notverysecret
-            - Name: DEBUG
-              Value: "True"
+              Value: REALLY_A_SECRET_1098590109385NLKAJKF
             - Name: DJANGO_SETTINGS_MODULE
-              Value: config.settings.local
+              Value: config.settings.production
+            - Name: DATABASE_URL
+              Value: postgres://postgres@localhost:5432/c2c
+            - Name: PORT
+              Value: 5000
+            PortMappings:
+            - ContainerPort: 5000
+              HostPort: 5000
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -80,22 +86,14 @@ Resources:
           Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-prediction
           MemoryReservation: 256
           Essential: true
-          Command:
-            - flask run --host=0.0.0.0 --port=8001
-          Environment:
-            - Name: FLASK_DEBUG
-              Value: 1
-            - Name: FLASK_APP
-              Value: src/factory.py
-            - Name: LC_ALL
-              Value: C.UTF-8
-            - Name: LANG
-              Value: C.UTF-8
           LogConfiguration:
             LogDriver: awslogs
             Options:
               awslogs-region: us-east-1
               awslogs-group: !Ref PredictionLogGroup
+          PortMappings:
+            - ContainerPort: 5001
+              HostPort: 5001
         - Name: c2c-postgres
           Image: postgres:9.6
           MemoryReservation: 256

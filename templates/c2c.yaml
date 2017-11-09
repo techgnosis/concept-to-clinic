@@ -41,7 +41,7 @@ Resources:
       Family: c2c
       ContainerDefinitions:
         - Name: c2c-ui
-          Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-ui:latest
+          Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-ui:0.0.23
           MemoryReservation: 256
           Essential: false
           Environment:
@@ -60,7 +60,7 @@ Resources:
               awslogs-region: us-east-1
               awslogs-group: !Ref UILogGroup
         - Name: c2c-api
-          Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-api:latest
+          Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-api:0.0.22
           MemoryReservation: 256
           Essential: false
           Links:
@@ -74,6 +74,8 @@ Resources:
               Value: postgres://concepttoclinic@c2c-postgres:5432/c2c-db
             - Name: PORT
               Value: 5000
+            - Name: DEBUG
+              Value: True
           LogConfiguration:
             LogDriver: awslogs
             Options:

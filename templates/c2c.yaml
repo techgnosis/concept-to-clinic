@@ -46,12 +46,12 @@ Resources:
           Essential: true
           Environment:
             - Name: NGINX_API_URL
-              Value: http://localhost:5001/api
+              Value: http://c2c-api/api
             - Name: NGINX_HOST
-              Value: 0.0.0.0
+              Value: c2c-ui
           PortMappings:
             - ContainerPort: 80
-              HostPort: 80
+              HostPort: 0
           Links:
             - c2c-api
           LogConfiguration:
@@ -64,19 +64,14 @@ Resources:
           MemoryReservation: 256
           Essential: true
           Environment:
-            - Name: POSTGRES_USER
-              Value: concepttoclinic
             - Name: SECRET_KEY
               Value: REALLY_A_SECRET_1098590109385NLKAJKF
             - Name: DJANGO_SETTINGS_MODULE
               Value: config.settings.production
             - Name: DATABASE_URL
-              Value: postgres://postgres@localhost:5432/c2c
+              Value: postgres://concepttoclinic@c2c-postgres:5432/c2c-db
             - Name: PORT
               Value: 5000
-            PortMappings:
-            - ContainerPort: 5000
-              HostPort: 5000
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -91,9 +86,6 @@ Resources:
             Options:
               awslogs-region: us-east-1
               awslogs-group: !Ref PredictionLogGroup
-          PortMappings:
-            - ContainerPort: 5001
-              HostPort: 5001
         - Name: c2c-postgres
           Image: postgres:9.6
           MemoryReservation: 256
@@ -101,6 +93,8 @@ Resources:
           Environment:
             - Name: POSTGRES_USER
               Value: concepttoclinic
+            - Name: POSTGRES_DB
+              Value: c2c-db
           LogConfiguration:
             LogDriver: awslogs
             Options:

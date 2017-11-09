@@ -43,7 +43,7 @@ Resources:
         - Name: c2c-ui
           Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-ui:latest
           MemoryReservation: 256
-          Essential: true
+          Essential: false
           Environment:
             - Name: NGINX_API_URL
               Value: http://c2c-api/api
@@ -62,7 +62,7 @@ Resources:
         - Name: c2c-api
           Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-api:latest
           MemoryReservation: 256
-          Essential: true
+          Essential: false
           Environment:
             - Name: SECRET_KEY
               Value: REALLY_A_SECRET_1098590109385NLKAJKF
@@ -80,7 +80,7 @@ Resources:
         - Name: c2c-prediction
           Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-prediction
           MemoryReservation: 256
-          Essential: true
+          Essential: false
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -113,7 +113,7 @@ Resources:
       TaskDefinition: !Ref TaskDefinition
       LoadBalancers:
         - TargetGroupArn: !ImportValue c2c-alb-defaulttargetgrouparn
-          ContainerPort: 8000
+          ContainerPort: 80
           ContainerName: c2c-ui
 
   HealthHostsAlarm:

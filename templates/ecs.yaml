@@ -32,7 +32,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       AssociatePublicIpAddress: true
-      KeyName: james
+      KeyName: dockcloud-swarm-useast-1
       SecurityGroups:
         - !Ref InstanceSecurityGroup
       IamInstanceProfile: arn:aws:iam::113913174193:instance-profile/concept-to-clinic-ecs-instance-profile

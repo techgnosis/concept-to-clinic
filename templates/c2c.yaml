@@ -63,6 +63,8 @@ Resources:
           Image: 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-api:latest
           MemoryReservation: 256
           Essential: false
+          Links:
+            - c2c-postgres
           Environment:
             - Name: SECRET_KEY
               Value: REALLY_A_SECRET_1098590109385NLKAJKF

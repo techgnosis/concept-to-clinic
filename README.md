@@ -30,6 +30,13 @@ Sceptre is just a very small tool for launching CloudFormation scripts. It is us
 
 How to deploy
 ---------------
-1. Change the "Image" field(s) for the container(s) you want to update in c2c.yaml. It will not pick up a new 'latest'. You need to specify more specific image tags.
-2. Run 'sceptre update-stack dev c2c'
+1. The file "versions.yaml" contains the values to be passed into the c2c.yaml template. You tell sceptre to use that file with the '--var-file' flag. For example:
+
+ sceptre --var-file=versions.yaml update-stack dev c2c
+
+ You must provide this flag when you deploy unless you manually override all four values (manual override is shown next)
+2. If you want to manually override one of those values, in a CI pipeline for example, you can override any value with the '-var' flag. For example:
+
+ sceptre --var "PostgresVersion=9.5" --var-file=versions.yaml update-stack dev c2c
+
 3. ECS will spin up a new task with the new containers, put the new task in the target group, and then kill the old task. It will connection drain any connections to the old task so users should never notice.

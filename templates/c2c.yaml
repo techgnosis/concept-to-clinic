@@ -52,7 +52,7 @@ Resources:
         - Name: c2c-ui
           Image: !Sub 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-ui:${UIVersion}
           MemoryReservation: 256
-          Essential: false
+          Essential: true
           Environment:
             - Name: NGINX_API_URL
               Value: http://c2c-api:5000/api
@@ -71,7 +71,7 @@ Resources:
         - Name: c2c-api
           Image: !Sub 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-api:${APIVersion}
           MemoryReservation: 256
-          Essential: false
+          Essential: true
           Links:
             - c2c-postgres
           Environment:
@@ -93,7 +93,7 @@ Resources:
         - Name: c2c-prediction
           Image: !Sub 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-prediction:${PredictionVersion}
           MemoryReservation: 256
-          Essential: false
+          Essential: true
           LogConfiguration:
             LogDriver: awslogs
             Options:

@@ -1,13 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: c2c task definition and service and logging
 Parameters:
-  UIVersion:
-    Type: String
-  APIVersion:
-    Type: String
-  PredictionVersion:
-    Type: String
-  PostgresVersion:
+  ImageVersion:
     Type: String
 Resources:
 
@@ -50,7 +44,7 @@ Resources:
       Family: c2c
       ContainerDefinitions:
         - Name: c2c-ui
-          Image: !Sub 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-ui:${UIVersion}
+          Image: !Sub 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-ui:${ImageVersion}
           MemoryReservation: 256
           Essential: true
           Environment:
@@ -69,7 +63,7 @@ Resources:
               awslogs-region: us-east-1
               awslogs-group: !Ref UILogGroup
         - Name: c2c-api
-          Image: !Sub 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-api:${APIVersion}
+          Image: !Sub 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-api:${ImageVersion}
           MemoryReservation: 256
           Essential: true
           Links:
@@ -91,7 +85,7 @@ Resources:
               awslogs-region: us-east-1
               awslogs-group: !Ref APILogGroup
         - Name: c2c-prediction
-          Image: !Sub 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-prediction:${PredictionVersion}
+          Image: !Sub 113913174193.dkr.ecr.us-east-1.amazonaws.com/c2c-prediction:${ImageVersion}
           MemoryReservation: 256
           Essential: true
           LogConfiguration:
@@ -100,7 +94,7 @@ Resources:
               awslogs-region: us-east-1
               awslogs-group: !Ref PredictionLogGroup
         - Name: c2c-postgres
-          Image: !Sub postgres:${PostgresVersion}
+          Image: !Sub postgres:9.6
           MemoryReservation: 256
           Essential: true
           Environment:
